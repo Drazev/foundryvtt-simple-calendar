@@ -43,25 +43,20 @@ export default class NoteManager {
      * Checks to see if the journal director for SC notes exists and creates it if it does not
      */
     public async createJournalDirectory() {
-        const journalDirectory = (<Game>game).journal?.directory;
-        if (journalDirectory) {
-            this.noteDirectory = journalDirectory.folders.find((f) => {
-                return f.getFlag(ModuleName, "root");
-            });
-            if (!this.noteDirectory && GameSettings.IsGm()) {
-                await Folder.create({
-                    name: NotesDirectoryName,
-                    type: "JournalEntry",
-                    parent: null,
-                    flags: {
-                        [ModuleName]: {
-                            root: true
-                        }
+        this.noteDirectory = (<Game>game).folders.find( journalFolder => journalFolder?.flags[ModuleName]?.root === true);
+        if (!this.noteDirectory && GameSettings.IsGm()) {
+            this.noteDirectory = await Folder.create({
+                name: NotesDirectoryName,
+                type: "JournalEntry",
+                parent: null,
+                flags: {
+                    [ModuleName]: {
+                        root: true
                     }
-                });
-                this.noteDirectory = journalDirectory.folders.find((f) => {
-                    return f.getFlag(ModuleName, "root");
-                });
+                }
+            })
+            if(!this.noteDirectory) {
+                throw new Error(`${ModuleName}::createJournalDirectory: Failed to locate or create root note directory.`)
             }
         }
     }
